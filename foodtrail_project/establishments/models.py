@@ -1,13 +1,30 @@
 from django.db import models
+from django.utils.text import slugify
 
 class EstablishmentType(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name="Nombre")
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
     description = models.TextField(blank=True, verbose_name="Descripción")
-    def __str__(self): return self.name
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+    
+    def __str__(self): 
+        return self.name
 
 class MealType(models.Model):
     name = models.CharField(max_length=50, unique=True)
-    def __str__(self): return self.name
+    slug = models.SlugField(max_length=50, unique=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+    
+    def __str__(self): 
+        return self.name
 
 class Establishment(models.Model):
     name = models.CharField(max_length=255, verbose_name="Nombre del Establecimiento")
