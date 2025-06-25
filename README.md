@@ -20,16 +20,17 @@ Una plataforma web para explorar la rica gastronomía de Sucre, Bolivia. Descubr
 
 1. **Clona el repositorio**:
    ```bash
-   git clone [https://github.com/Micky-CM/foodtrail_sucre.git](https://github.com/Micky-CM/foodtrail_sucre.git)
+   git clone https://github.com/Micky-CM/foodtrail_sucre.git
    cd foodtrail_sucre
 
 2. **Crea un entorno virtual (recomendado)**:
-    En Windows:
+
+- En Windows:
    ```bash
    python -m venv venv
    venv\Scripts\activate
 
-    En Linux/Mac:
+- En Linux/Mac:
    ```bash
    python -m venv venv
    source venv/bin/activate
@@ -51,7 +52,7 @@ Una plataforma web para explorar la rica gastronomía de Sucre, Bolivia. Descubr
    python manage.py runserver
 
 7. **Accede a la aplicación**:
-   Abre tu navegador y ve a `http://localhost:8000` para ver la aplicación.
+- Abre tu navegador y ve a `http://localhost:8000` para ver la aplicación.
 
 ## Estructura del Proyecto 📁
 ```
