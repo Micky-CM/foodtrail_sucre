@@ -3,73 +3,11 @@
 {% block content %}
 <div class="mb-8">
     <p class="text-gray-600 mb-4">Descubre los mejores lugares para comer en la ciudad blanca de América.</p>
-
-    <!-- Filtros activos -->
-    {% if active_filters.establishment_type or active_filters.meal_type or active_filters.menu_item_type %}
-    <div class="mb-6 p-4 bg-blue-50 rounded-lg">
-        <h3 class="font-medium text-gray-900 mb-2">Filtros aplicados:</h3>
-        <div class="flex flex-wrap gap-2">
-            {% if active_filters.establishment_type %}
-                {% for type in establishment_types %}
-                    {% if type.slug == active_filters.establishment_type %}
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                        {{ type.name }}
-                        <a href="?{% if active_filters.meal_type %}meal_type={{ active_filters.meal_type }}{% endif %}{% if active_filters.menu_item_type %}{% if active_filters.meal_type %}&{% endif %}menu_item_type={{ active_filters.menu_item_type }}{% endif %}" 
-                           class="ml-1.5 inline-flex items-center justify-center h-4 w-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500">
-                            <span class="sr-only">Eliminar filtro</span>
-                            <svg class="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
-                                <path stroke-linecap="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7" />
-                            </svg>
-                        </a>
-                    </span>
-                    {% endif %}
-                {% endfor %}
-            {% endif %}
-            
-            {% if active_filters.meal_type %}
-                {% for type in meal_types %}
-                    {% if type.slug == active_filters.meal_type %}
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                        {{ type.name }}
-                        <a href="?{% if active_filters.establishment_type %}establishment_type={{ active_filters.establishment_type }}{% endif %}{% if active_filters.menu_item_type %}{% if active_filters.establishment_type %}&{% endif %}menu_item_type={{ active_filters.menu_item_type }}{% endif %}" 
-                           class="ml-1.5 inline-flex items-center justify-center h-4 w-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500">
-                            <span class="sr-only">Eliminar filtro</span>
-                            <svg class="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
-                                <path stroke-linecap="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7" />
-                            </svg>
-                        </a>
-                    </span>
-                    {% endif %}
-                {% endfor %}
-            {% endif %}
-            
-            {% if active_filters.menu_item_type %}
-                {% for type in menu_item_types %}
-                    {% if type.slug == active_filters.menu_item_type %}
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                        {{ type.name }}
-                        <a href="?{% if active_filters.establishment_type %}establishment_type={{ active_filters.establishment_type }}{% endif %}{% if active_filters.meal_type %}{% if active_filters.establishment_type %}&{% endif %}meal_type={{ active_filters.meal_type }}{% endif %}" 
-                           class="ml-1.5 inline-flex items-center justify-center h-4 w-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500">
-                            <span class="sr-only">Eliminar filtro</span>
-                            <svg class="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
-                                <path stroke-linecap="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7" />
-                            </svg>
-                        </a>
-                    </span>
-                    {% endif %}
-                {% endfor %}
-            {% endif %}
-            
-            <a href="{% url 'core:home' %}" class="text-sm text-blue-600 hover:text-blue-800 self-center ml-2">
-                Limpiar filtros
-            </a>
-        </div>
-    </div>
-    {% endif %}
 </div>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for establishment in establishments %}
+    <a href="{% url 'core:establishment_detail' establishment.id %}" class="block h-full">
     <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
         {% if establishment.images.all %}
         <div class="relative h-48 overflow-hidden">
@@ -123,6 +61,7 @@
             </div>
         </div>
     </div>
+    </a>
     {% empty %}
     <div class="col-span-3 text-center py-12">
         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

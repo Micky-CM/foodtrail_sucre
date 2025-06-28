@@ -1,3 +1,4 @@
+{% load url_utils %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -21,9 +22,12 @@
                             Inicio
                         </a>
                         {% for type in establishment_types %}
-                        <a href="{{ build_url|default:'' }}{% if build_url and not build_url == '?' %}&{% else %}?{% endif %}establishment_type={% if active_filters.establishment_type == type.slug %}{% else %}{{ type.slug }}{% endif %}" 
-                           class="{% if active_filters.establishment_type == type.slug %}border-indigo-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        <a href="{% toggle_filter 'establishment_type' type.slug %}" 
+                           class="{% if type.slug in request.GET.getlist|default:'' %}border-indigo-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             {{ type.name }}
+                            {% if type.slug in request.GET.getlist|default:'' %}
+                            <span class="ml-1 text-indigo-600">✓</span>
+                            {% endif %}
                         </a>
                         {% endfor %}
                     </div>
@@ -45,6 +49,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
+                    <!-- Espacio para contenido principal -->
                 </div>
                 <div class="flex-1 overflow-y-auto">
                     <div class="p-4">
@@ -86,9 +91,14 @@
                 <ul class="space-y-2">
                     {% for type in meal_types %}
                     <li>
-                        <a href="{{ build_url|default:'' }}{% if build_url and not build_url == '?' %}&{% else %}?{% endif %}meal_type={% if active_filters.meal_type == type.slug %}{% else %}{{ type.slug }}{% endif %}" 
-                           class="block px-3 py-1 rounded hover:bg-gray-100 {% if active_filters.meal_type == type.slug %}bg-blue-50 text-blue-700{% endif %}">
-                            {{ type.name }}
+                        <a href="{% toggle_filter 'meal_type' type.slug %}" 
+                           class="block px-3 py-1 rounded hover:bg-gray-100 {% if type.slug in request.GET.getlist|default:'' %}bg-blue-50 text-blue-700{% endif %}">
+                            <div class="flex items-center">
+                                <span>{{ type.name }}</span>
+                                {% if type.slug in request.GET.getlist|default:'' %}
+                                <span class="ml-2 text-blue-600">✓</span>
+                                {% endif %}
+                            </div>
                         </a>
                     </li>
                     {% endfor %}
@@ -99,9 +109,14 @@
                 <ul class="space-y-2">
                     {% for type in menu_item_types %}
                     <li>
-                        <a href="{{ build_url|default:'' }}{% if build_url and not build_url == '?' %}&{% else %}?{% endif %}menu_item_type={% if active_filters.menu_item_type == type.slug %}{% else %}{{ type.slug }}{% endif %}" 
-                           class="block px-3 py-1 rounded hover:bg-gray-100 {% if active_filters.menu_item_type == type.slug %}bg-blue-50 text-blue-700{% endif %}">
-                            {{ type.name }}
+                        <a href="{% toggle_filter 'menu_item_type' type.slug %}" 
+                           class="block px-3 py-1 rounded hover:bg-gray-100 {% if type.slug in request.GET.getlist|default:'' %}bg-blue-50 text-blue-700{% endif %}">
+                            <div class="flex items-center">
+                                <span>{{ type.name }}</span>
+                                {% if type.slug in request.GET.getlist|default:'' %}
+                                <span class="ml-2 text-blue-600">✓</span>
+                                {% endif %}
+                            </div>
                         </a>
                     </li>
                     {% endfor %}
@@ -119,6 +134,30 @@
                     </svg>
                 </button>
             </div>
+
+            <!-- Filtros activos -->
+            {% if active_filters %}
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-medium text-gray-900">Filtros aplicados:</h3>
+                    <a href="?" class="text-sm text-indigo-600 hover:text-indigo-800">Limpiar todos</a>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    {% for filter_type, filter_data in active_filters.items %}
+                        {% for value in filter_data.values %}
+                        <div class="flex items-center bg-white px-3 py-1 rounded-full text-sm font-medium text-gray-700 border border-gray-200">
+                            <span class="mr-1">{{ filter_data.name }}: {{ value.name }}</span>
+                            <a href="{% toggle_filter filter_type value.slug %}" class="text-gray-400 hover:text-gray-600">
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
 
             {% block content %}
             {% endblock %}

@@ -7,4 +7,5 @@ app_name = 'core'
 
 urlpatterns = [
     path('', views.home, name='home'),
+    path('establishment/<int:establishment_id>/', views.establishment_detail, name='establishment_detail'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
