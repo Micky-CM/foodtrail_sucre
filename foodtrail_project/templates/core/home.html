@@ -3,7 +3,7 @@
 {% block content %}
 <div class="mb-8">
     <p class="text-gray-600 mb-4">Descubre los mejores lugares para comer en la ciudad blanca de América.</p>
-    
+
     <!-- Filtros activos -->
     {% if active_filters.establishment_type or active_filters.meal_type or active_filters.menu_item_type %}
     <div class="mb-6 p-4 bg-blue-50 rounded-lg">
@@ -71,9 +71,29 @@
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for establishment in establishments %}
     <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
-        {% if establishment.images.first %}
-        <img src="{{ establishment.images.first.image.url }}" alt="{{ establishment.name }}" 
-             class="w-full h-48 object-cover">
+        {% if establishment.images.all %}
+        <div class="relative h-48 overflow-hidden">
+            <div class="carousel-{{ establishment.id }} relative w-full h-full">
+                {% for image in establishment.images.all %}
+                <div class="carousel-item w-full h-full {% if forloop.first %}block{% else %}hidden{% endif %}">
+                    <img src="{{ image.image.url }}" alt="{{ establishment.name }}" 
+                         class="w-full h-full object-cover">
+                </div>
+                {% endfor %}
+            </div>
+            {% if establishment.images.count > 1 %}
+            <button onclick="prevSlide('{{ establishment.id }}')" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/50">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
+            <button onclick="nextSlide('{{ establishment.id }}')" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/50">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+            {% endif %}
+        </div>
         {% else %}
         <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
             <span class="text-gray-400">Sin imagen</span>
@@ -113,4 +133,42 @@
     </div>
     {% endfor %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showSlide(establishmentId, index) {
+    const carousel = document.querySelector(`.carousel-${establishmentId}`);
+    const slides = carousel.querySelectorAll('.carousel-item');
+    slides.forEach((slide, i) => {
+        slide.classList.toggle('hidden', i !== index);
+    });
+}
+
+function nextSlide(establishmentId) {
+    const carousel = document.querySelector(`.carousel-${establishmentId}`);
+    const slides = carousel.querySelectorAll('.carousel-item');
+    let currentIndex = Array.from(slides).findIndex(slide => !slide.classList.contains('hidden'));
+    const nextIndex = (currentIndex + 1) % slides.length;
+    showSlide(establishmentId, nextIndex);
+}
+
+function prevSlide(establishmentId) {
+    const carousel = document.querySelector(`.carousel-${establishmentId}`);
+    const slides = carousel.querySelectorAll('.carousel-item');
+    let currentIndex = Array.from(slides).findIndex(slide => !slide.classList.contains('hidden'));
+    const prevIndex = (currentIndex - 1 + slides.length) % slides.length;
+    showSlide(establishmentId, prevIndex);
+}
+
+// Auto-avance del carrusel cada 5 segundos
+document.addEventListener('DOMContentLoaded', function() {
+    setInterval(() => {
+        document.querySelectorAll('[id^="carousel-"]').forEach(carousel => {
+            const establishmentId = carousel.id.split('-')[1];
+            nextSlide(establishmentId);
+        });
+    }, 5000);
+});
+</script>
 {% endblock %}
