@@ -1,9 +1,11 @@
 from django.shortcuts import render, get_object_or_404
 from establishments.models import Establishment, EstablishmentType, MealType
 from menu.models import MenuItemType, MenuItem
+from django.db.models import Q
 
 from urllib.parse import urlencode
 from django.conf import settings
+import random
 
 def home(request):
     # Obtener todos los tipos para los filtros
@@ -116,3 +118,36 @@ def establishment_detail(request, establishment_id):
         'menu_items': menu_items,
     }
     return render(request, 'core/establishment_detail.html', context)
+
+def landing_page(request):
+    """Vista para la página principal con carrusel de establecimientos"""
+    # Obtener establecimientos con imágenes para el carrusel
+    establishments_with_images = Establishment.objects.filter(images__isnull=False).distinct()
+    
+    # Seleccionar máximo 5 establecimientos para el carrusel
+    carousel_establishments = list(establishments_with_images[:5])
+    
+    # Si no hay suficientes, tomar algunos al azar
+    if len(carousel_establishments) < 5:
+        all_establishments = list(Establishment.objects.all())
+        remaining = [est for est in all_establishments if est not in carousel_establishments]
+        random.shuffle(remaining)
+        carousel_establishments.extend(remaining[:5-len(carousel_establishments)])
+    
+    # Preparar datos para el carrusel con primera imagen de cada establecimiento
+    carousel_data = []
+    for establishment in carousel_establishments:
+        first_image = establishment.images.first()
+        carousel_data.append({
+            'establishment': establishment,
+            'image': first_image.image.url if first_image else '/static/images/default-restaurant.jpg',
+            'name': establishment.name,
+            'description': establishment.description[:100] + '...' if len(establishment.description) > 100 else establishment.description,
+            'zone': establishment.zone,
+        })
+    
+    context = {
+        'carousel_establishments': carousel_data,
+        'MEDIA_URL': settings.MEDIA_URL,
+    }
+    return render(request, 'core/landing_page.html', context)

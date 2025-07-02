@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodTrail Sucre</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .carousel-slide {
+            transition: all 0.8s ease-in-out;
+        }
+        
+        .background-overlay {
+            background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%);
+        }
+        
+        .text-shadow {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .carousel-container {
+            height: 100vh;
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 1s ease-in-out;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+        
+        .delay-300 {
+            animation-delay: 0.3s;
+        }
+        
+        .delay-600 {
+            animation-delay: 0.6s;
+        }
+        
+        .delay-900 {
+            animation-delay: 0.9s;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .slide-up {
+            animation: slideUp 0.6s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .nav-glass {
+            background: rgba(255, 255, 255, 0.95);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+    <!-- Navegación flotante -->
+    <nav class="fixed top-0 left-0 right-0 z-50 nav-glass">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold text-gray-800">FoodTrail Sucre</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="{% url 'core:home' %}" class="text-gray-700 hover:text-amber-600 font-medium transition-colors">Explorar</a>
+                </div>
+                <button class="md:hidden p-2 rounded-md text-gray-700 hover:bg-gray-100">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenedor principal del carrusel -->
+    <div id="carousel-container" class="carousel-container relative">
+        <!-- Overlay con gradiente -->
+        <div class="background-overlay absolute inset-0 z-10"></div>
+        
+        <!-- Contenido del carrusel -->
+        <div class="relative z-20 h-full flex items-center justify-center">
+            <div class="max-w-4xl mx-auto px-4 text-center text-white">
+                <!-- Contenido dinámico del carrusel -->
+                <div id="carousel-content">
+                    {% for establishment in carousel_establishments %}
+                    <div class="carousel-slide {% if forloop.first %}block{% else %}hidden{% endif %}" data-bg="{{ establishment.image }}">
+                        <h1 class="text-5xl md:text-7xl font-bold mb-6 text-shadow fade-in">
+                            {{ establishment.name }}
+                        </h1>
+                        <p class="text-xl md:text-2xl mb-8 text-shadow fade-in delay-300">
+                            {{ establishment.description }}
+                        </p>
+                        {% if establishment.zone %}
+                        <p class="text-lg md:text-xl mb-8 text-amber-300 text-shadow fade-in delay-600">
+                            📍 {{ establishment.zone }}
+                        </p>
+                        {% endif %}
+                        <div class="space-y-4 md:space-y-0 md:space-x-6 md:flex md:justify-center fade-in delay-900">
+                            <a href="{% url 'core:establishment_detail' establishment.establishment.id %}" 
+                               class="inline-block bg-amber-600 hover:bg-amber-700 text-white font-bold py-4 px-8 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-lg">
+                                Ver Detalles
+                            </a>
+                            <a href="{% url 'core:home' %}" 
+                               class="inline-block border-2 border-white text-white hover:bg-white hover:text-gray-800 font-bold py-4 px-8 rounded-full text-lg transition-all duration-300 transform hover:scale-105">
+                                Explorar Más
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Indicadores del carrusel -->
+                <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-3">
+                    {% for establishment in carousel_establishments %}
+                    <button class="carousel-indicator w-3 h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-100 transition-all duration-300 {% if forloop.first %}bg-opacity-100{% endif %}" 
+                            data-slide="{{ forloop.counter0 }}"></button>
+                    {% endfor %}
+                </div>
+                
+                <!-- Flechas de navegación -->
+                <button id="prev-btn" class="absolute left-8 top-1/2 transform -translate-y-1/2 text-white hover:text-amber-300 transition-colors duration-300">
+                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <button id="next-btn" class="absolute right-8 top-1/2 transform -translate-y-1/2 text-white hover:text-amber-300 transition-colors duration-300">
+                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Scroll indicator -->
+        <div class="absolute bottom-8 right-8 z-30">
+            <div class="text-white text-center">
+                <p class="text-sm mb-2 text-shadow">Desliza hacia abajo</p>
+                <div class="animate-bounce">
+                    <svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de información adicional -->
+    <section class="bg-white py-16">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Descubre la Gastronomía de Sucre</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Sumérgete en un viaje culinario único a través de los sabores auténticos de Sucre. 
+                    Desde restaurantes tradicionales hasta cafeterías modernas, encuentra tu próxima experiencia gastronómica.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-4xl mb-4">🍽️</div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Restaurantes Auténticos</h3>
+                    <p class="text-gray-600">Explora los mejores restaurantes con comida tradicional boliviana y internacional.</p>
+                </div>
+                
+                <div class="text-center p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-4xl mb-4">☕</div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Cafeterías Únicas</h3>
+                    <p class="text-gray-600">Disfruta del mejor café local en ambientes acogedores y con historia.</p>
+                </div>
+                
+                <div class="text-center p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-4xl mb-4">🍺</div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Pubs y Bares</h3>
+                    <p class="text-gray-600">Relájate en los mejores pubs con ambiente local y bebidas artesanales.</p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-12">
+                <a href="{% url 'core:home' %}" 
+                   class="inline-block bg-amber-600 hover:bg-amber-700 text-white font-bold py-4 px-8 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-lg">
+                    Comenzar Exploración
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-gray-400">
+                &copy; 2025 FoodTrail Sucre. Descubre los sabores auténticos de nuestra ciudad.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.carousel-slide');
+        const indicators = document.querySelectorAll('.carousel-indicator');
+        const carouselContainer = document.getElementById('carousel-container');
+        const totalSlides = slides.length;
+        
+        function updateCarousel(slideIndex, animate = true) {
+            // Ocultar todas las slides
+            slides.forEach(slide => {
+                slide.classList.add('hidden');
+                slide.classList.remove('block');
+            });
+            
+            // Actualizar indicadores
+            indicators.forEach((indicator, index) => {
+                if (index === slideIndex) {
+                    indicator.classList.remove('bg-opacity-50');
+                    indicator.classList.add('bg-opacity-100');
+                } else {
+                    indicator.classList.remove('bg-opacity-100');
+                    indicator.classList.add('bg-opacity-50');
+                }
+            });
+            
+            // Cambiar fondo usando el atributo data-bg del slide
+            const currentSlideElement = slides[slideIndex];
+            if (currentSlideElement) {
+                const backgroundImage = currentSlideElement.getAttribute('data-bg');
+                if (backgroundImage) {
+                    carouselContainer.style.backgroundImage = `url('${backgroundImage}')`;
+                }
+            }
+            
+            // Mostrar slide actual con animación
+            setTimeout(() => {
+                slides[slideIndex].classList.remove('hidden');
+                slides[slideIndex].classList.add('block');
+                
+                if (animate) {
+                    // Reiniciar animaciones
+                    const elements = slides[slideIndex].querySelectorAll('.fade-in');
+                    elements.forEach((el) => {
+                        el.style.animation = 'none';
+                        setTimeout(() => {
+                            el.style.animation = '';
+                            el.classList.remove('fade-in');
+                            el.classList.add('fade-in');
+                        }, 100);
+                    });
+                }
+            }, animate ? 200 : 0);
+        }
+        
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % totalSlides;
+            updateCarousel(currentSlide);
+        }
+        
+        function prevSlide() {
+            currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+            updateCarousel(currentSlide);
+        }
+        
+        // Event listeners
+        document.getElementById('next-btn').addEventListener('click', nextSlide);
+        document.getElementById('prev-btn').addEventListener('click', prevSlide);
+        
+        // Indicadores
+        indicators.forEach((indicator, index) => {
+            indicator.addEventListener('click', () => {
+                currentSlide = index;
+                updateCarousel(currentSlide);
+            });
+        });
+        
+        // Auto-play del carrusel
+        let autoPlayInterval = setInterval(nextSlide, 5000);
+        
+        // Pausar auto-play al hover
+        carouselContainer.addEventListener('mouseenter', () => {
+            clearInterval(autoPlayInterval);
+        });
+        
+        carouselContainer.addEventListener('mouseleave', () => {
+            autoPlayInterval = setInterval(nextSlide, 5000);
+        });
+        
+        // Navegación con teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'ArrowRight') nextSlide();
+        });
+        
+        // Inicializar carrusel
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCarousel(0, false);
+        });
+    </script>
+</body>
+</html>
