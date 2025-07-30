@@ -25,6 +25,5 @@ urlpatterns = [
     path('chatbot/', include('chatbot.urls')),
 ]
 
-# Solo en desarrollo: servir archivos multimedia
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+﻿from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import render
@@ -15,13 +15,11 @@ from .neural_network import NeuralNetworkClassifier
 logger = logging.getLogger(__name__)
 
 def chat_page(request):
-    """Renderiza la página del chat"""
     return render(request, 'chatbot/chat.html')
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def chat_api(request):
-    """API endpoint para procesar mensajes del chat"""
     try:
         data = json.loads(request.body)
         user_message = data.get('message', '').strip()
@@ -29,38 +27,32 @@ def chat_api(request):
         
         if not user_message:
             return JsonResponse({
-                'error': 'Mensaje vacío'
+                'error': 'Mensaje vacÃ­o'
             }, status=400)
         
-        # Inicializar componentes
         llm_client = OnlineLLMClient()
         recommendation_engine = RecommendationEngine()
         neural_classifier = NeuralNetworkClassifier()
         
-        # Obtener o crear sesión
         session = get_or_create_session(session_id, request)
         
-        # Guardar mensaje del usuario
         user_chat_message = ChatMessage.objects.create(
             session=session,
             message_type='user',
             content=user_message
         )
         
-        # Procesar mensaje y generar respuesta
         response_data = process_user_message(
             user_message, session, llm_client, 
             recommendation_engine, neural_classifier
         )
         
-        # Guardar respuesta del bot
         bot_message = ChatMessage.objects.create(
             session=session,
             message_type='bot',
             content=response_data['message']
         )
         
-        # Si hay recomendaciones, asociarlas al mensaje
         if response_data.get('recommendations'):
             from establishments.models import Establishment
             for rec in response_data['recommendations']:
@@ -80,18 +72,17 @@ def chat_api(request):
         
     except json.JSONDecodeError:
         return JsonResponse({
-            'error': 'JSON inválido'
+            'error': 'JSON invÃ¡lido'
         }, status=400)
     except Exception as e:
         logger.error(f"Error procesando mensaje: {e}")
-        print(f"🔥 ERROR en chat_api: {e}")
+        print(f"ðŸ”¥ ERROR en chat_api: {e}")
         return JsonResponse({
-            'message': 'Lo siento, ocurrió un error inesperado. Por favor, intenta de nuevo.',
+            'message': 'Lo siento, ocurriÃ³ un error inesperado. Por favor, intenta de nuevo.',
             'error': 'Error interno del servidor'
         }, status=500)
 
 def get_or_create_session(session_id: str, request) -> ChatSession:
-    """Obtiene o crea una sesión de chat"""
     if session_id:
         try:
             session = ChatSession.objects.get(session_id=session_id)
@@ -99,7 +90,6 @@ def get_or_create_session(session_id: str, request) -> ChatSession:
         except ChatSession.DoesNotExist:
             pass
     
-    # Crear nueva sesión
     new_session_id = str(uuid.uuid4())
     session = ChatSession.objects.create(
         session_id=new_session_id,
@@ -110,77 +100,64 @@ def get_or_create_session(session_id: str, request) -> ChatSession:
 
 def process_user_message(user_message: str, session: ChatSession, 
                         llm_client, recommendation_engine, neural_classifier) -> dict:
-    """Procesa el mensaje del usuario y genera respuesta"""
     
-    print(f"🔍 Procesando mensaje: {user_message}")
+    print(f"ðŸ” Procesando mensaje: {user_message}")
     
-    # 1. Analizar mensaje con la red neuronal
-    print("🧠 Analizando con red neuronal...")
+    print("ðŸ§  Analizando con red neuronal...")
     analysis = neural_classifier.analyze_message(user_message)
     intent = analysis['intent']
     confidence = analysis['confidence']
     features = analysis['features']
     
-    print(f"✅ Análisis completado - Intent: {intent}, Confidence: {confidence}")
-    logger.info(f"Análisis del mensaje - Intent: {intent}, Confidence: {confidence}")
+    print(f"âœ… AnÃ¡lisis completado - Intent: {intent}, Confidence: {confidence}")
+    logger.info(f"AnÃ¡lisis del mensaje - Intent: {intent}, Confidence: {confidence}")
     
-    # 2. Obtener contexto de la conversación
-    print("📝 Obteniendo contexto...")
+    print("ðŸ“ Obteniendo contexto...")
     context = get_conversation_context(session)
     
-    # 3. Determinar si necesitamos buscar establecimientos
     recommendations = []
     
     try:
-        # Solo buscar establecimientos si la intención es relevante Y tiene suficiente confianza
         should_search = (
             neural_classifier.should_search_establishments(intent) and 
-            confidence > 0.3  # Umbral mínimo de confianza
+            confidence > 0.3
         ) or (
-            # O si la confianza es baja pero hay palabras clave de búsqueda
             confidence < 0.5 and any(keyword in user_message.lower() 
                                    for keyword in ['restaurante', 'lugar', 'comer', 'comida', 'recomienda', 'quiero', 'busco'])
         )
         
         if should_search:
-            print("🔍 Buscando establecimientos...")
-            # Usar LLM para extraer preferencias más detalladas
+            print("ðŸ” Buscando establecimientos...")
             preferences = llm_client.extract_preferences(user_message)
-            print(f"✅ Preferencias extraídas por LLM: {preferences}")
+            print(f"âœ… Preferencias extraÃ­das por LLM: {preferences}")
             
-            # Si no se extrajeron preferencias con LLM, usar las del análisis neural
             if not preferences:
                 preferences = convert_features_to_preferences(features, analysis.get('entities', {}))
             
-            logger.info(f"Preferencias extraídas: {preferences}")
+            logger.info(f"Preferencias extraÃ­das: {preferences}")
             
-            # Buscar establecimientos
             if preferences:
                 recommendations = recommendation_engine.find_establishments(preferences, user_message)
-                print(f"✅ Encontradas {len(recommendations)} recomendaciones")
+                print(f"âœ… Encontradas {len(recommendations)} recomendaciones")
                 
-                # Actualizar preferencias del usuario
                 update_user_preferences(session, preferences)
         
-        # 4. Generar respuesta usando LLM
-        print("🤖 Generando respuesta con LLM...")
+        print("ðŸ¤– Generando respuesta con LLM...")
         if recommendations:
             response_message = llm_client.generate_recommendation_text(recommendations, user_message)
         else:
-            # Respuesta conversacional sin recomendaciones específicas
             if intent == 'saludo':
-                response_message = "¡Hola! Soy FoodTrail AI, tu asistente gastronómico especializado en Sucre. Estoy aquí para recomendarte los mejores lugares para comer. ¿Qué tipo de experiencia culinaria buscas hoy?"
+                response_message = "Â¡Hola! Soy FoodTrail AI, tu asistente gastronÃ³mico especializado en Sucre. Estoy aquÃ­ para recomendarte los mejores lugares para comer. Â¿QuÃ© tipo de experiencia culinaria buscas hoy?"
             elif intent == 'agradecimiento':
-                response_message = "¡Es un placer ayudarte! Si necesitas más recomendaciones o tienes preguntas específicas sobre algún restaurante, estaré aquí para ayudarte."
+                response_message = "Â¡Es un placer ayudarte! Si necesitas mÃ¡s recomendaciones o tienes preguntas especÃ­ficas sobre algÃºn restaurante, estarÃ© aquÃ­ para ayudarte."
             else:
-                # Usar LLM para respuesta general
                 template = neural_classifier.get_response_template(intent)
                 response_message = llm_client.generate_response(user_message, context)
                 
                 if not response_message or "error" in response_message.lower():
                     response_message = template
         
-        print(f"✅ Respuesta generada: {response_message[:100]}...")
+        print(f"âœ… Respuesta generada: {response_message[:100]}...")
         
         return {
             'message': response_message,
@@ -190,20 +167,19 @@ def process_user_message(user_message: str, session: ChatSession,
         }
         
     except Exception as e:
-        print(f"🔥 ERROR en process_user_message: {e}")
+        print(f"ðŸ”¥ ERROR en process_user_message: {e}")
         logger.error(f"Error en process_user_message: {e}")
         return {
-            'message': 'Lo siento, ocurrió un error procesando tu mensaje.',
+            'message': 'Lo siento, ocurriÃ³ un error procesando tu mensaje.',
             'recommendations': [],
             'intent': 'error',
             'confidence': 0.0
         }
 
 def get_conversation_context(session: ChatSession) -> str:
-    """Obtiene el contexto de los últimos mensajes de la conversación"""
     recent_messages = ChatMessage.objects.filter(
         session=session
-    ).order_by('-timestamp')[:6]  # Últimos 6 mensajes
+    ).order_by('-timestamp')[:6]
     
     context_parts = []
     for msg in reversed(recent_messages):
@@ -213,10 +189,8 @@ def get_conversation_context(session: ChatSession) -> str:
     return "\n".join(context_parts)
 
 def convert_features_to_preferences(features: dict, entities: dict) -> dict:
-    """Convierte características y entidades extraídas a formato de preferencias"""
     preferences = {}
     
-    # Mapear características a preferencias
     if 'tiempo_comida' in features:
         preferences['horario_comida'] = features['tiempo_comida']
     
@@ -230,7 +204,6 @@ def convert_features_to_preferences(features: dict, entities: dict) -> dict:
     if 'presupuesto' in features:
         preferences['presupuesto'] = features['presupuesto']
     
-    # Procesar entidades
     if 'platos_tipicos' in entities:
         preferences['tipo_comida'] = ['tradicional', 'boliviana']
     
@@ -240,7 +213,6 @@ def convert_features_to_preferences(features: dict, entities: dict) -> dict:
     return preferences
 
 def update_user_preferences(session: ChatSession, preferences: dict):
-    """Actualiza las preferencias del usuario en la base de datos"""
     try:
         user_pref, created = UserPreference.objects.get_or_create(
             session=session,
@@ -249,17 +221,14 @@ def update_user_preferences(session: ChatSession, preferences: dict):
             }
         )
         
-        # Función auxiliar para normalizar valores
         def normalize_values(values):
             if isinstance(values, dict):
-                # Extraer claves donde el valor es True
                 return [k for k, v in values.items() if v]
             elif isinstance(values, list):
                 return values
             else:
                 return [values] if values else []
         
-        # Actualizar preferencias existentes
         for pref_type, values in preferences.items():
             normalized_values = normalize_values(values)
             
@@ -283,7 +252,6 @@ def update_user_preferences(session: ChatSession, preferences: dict):
 
 @require_http_methods(["GET"])
 def chat_history(request, session_id):
-    """Obtiene el historial de una sesión de chat"""
     try:
         session = ChatSession.objects.get(session_id=session_id)
         messages = ChatMessage.objects.filter(session=session).order_by('timestamp')
@@ -296,7 +264,6 @@ def chat_history(request, session_id):
                 'timestamp': msg.timestamp.isoformat()
             }
             
-            # Incluir recomendaciones si las hay
             if msg.message_type == 'bot' and msg.recommended_establishments.exists():
                 recommendations = []
                 for est in msg.recommended_establishments.all():
@@ -317,12 +284,11 @@ def chat_history(request, session_id):
         
     except ChatSession.DoesNotExist:
         return JsonResponse({
-            'error': 'Sesión no encontrada'
+            'error': 'SesiÃ³n no encontrada'
         }, status=404)
 
 @require_http_methods(["GET"])
 def health_check(request):
-    """Verifica el estado del sistema de chatbot"""
     llm_client = OnlineLLMClient()
     
     return JsonResponse({

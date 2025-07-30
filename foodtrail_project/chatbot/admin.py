@@ -1,4 +1,4 @@
-from django.contrib import admin
+﻿from django.contrib import admin
 from .models import ChatSession, ChatMessage, UserPreference
 
 @admin.register(ChatSession)
@@ -10,7 +10,7 @@ class ChatSessionAdmin(admin.ModelAdmin):
     
     def message_count(self, obj):
         return obj.messages.count()
-    message_count.short_description = 'Número de mensajes'
+    message_count.short_description = 'NÃºmero de mensajes'
 
 @admin.register(ChatMessage)
 class ChatMessageAdmin(admin.ModelAdmin):
@@ -37,7 +37,7 @@ class UserPreferenceAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at')
     
     def user_display(self, obj):
-        return obj.user.username if obj.user else f"Sesión {obj.session.session_id}"
+        return obj.user.username if obj.user else f"SesiÃ³n {obj.session.session_id}"
     user_display.short_description = 'Usuario'
     
     def cuisine_count(self, obj):

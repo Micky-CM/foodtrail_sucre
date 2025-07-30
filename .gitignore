@@ -3,6 +3,18 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Archivos temporales del proyecto
+*.log
+*.tmp
+test_*.py
+check_*.py
+setup_*.py
+drop_*.py
+analyze_*.py
+*_backup.*
+*_old.*
+*_temp.*
+
 # C extensions
 *.so
 

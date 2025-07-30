@@ -13,17 +13,12 @@ import re
 logger = logging.getLogger(__name__)
 
 class AdvancedNeuralChatbot:
-    """
-    Red neuronal más avanzada usando scikit-learn para clasificación de intenciones
-    y extracción de entidades más precisa
-    """
-    
     def __init__(self, model_path: str = None):
         self.model_path = model_path or 'chatbot_model.pkl'
         self.vectorizer = TfidfVectorizer(
             ngram_range=(1, 3),
             max_features=1000,
-            stop_words=None,  # No usamos stop words en español por defecto
+            stop_words=None,
             lowercase=True
         )
         self.classifier = MLPClassifier(
@@ -48,7 +43,6 @@ class AdvancedNeuralChatbot:
             'despedida'
         ]
         
-        # Entidades específicas del dominio gastronómico
         self.entities_patterns = {
             'comida_boliviana': [
                 'pique macho', 'mondongo', 'salteña', 'empanada', 'api con pastel',
@@ -87,11 +81,9 @@ class AdvancedNeuralChatbot:
         self.load_or_create_model()
     
     def generate_training_data(self) -> Tuple[List[str], List[str]]:
-        """Genera datos de entrenamiento sintéticos para el clasificador"""
         training_texts = []
         training_labels = []
         
-        # Datos para buscar_restaurante
         restaurant_phrases = [
             "busco un restaurante", "donde puedo comer", "recomienda un lugar",
             "quiero ir a comer", "necesito un lugar para almorzar",
@@ -102,7 +94,6 @@ class AdvancedNeuralChatbot:
             training_texts.append(phrase)
             training_labels.append('buscar_restaurante')
         
-        # Datos para buscar_comida_especifica
         food_phrases = [
             "quiero comer pique macho", "donde venden salteñas",
             "busco comida tradicional", "quiero probar mondongo",
@@ -113,7 +104,6 @@ class AdvancedNeuralChatbot:
             training_texts.append(phrase)
             training_labels.append('buscar_comida_especifica')
         
-        # Datos para buscar_ambiente
         ambience_phrases = [
             "lugar romantico para dos", "restaurante familiar",
             "ambiente tranquilo", "lugar acogedor", "sitio elegante",
@@ -123,7 +113,6 @@ class AdvancedNeuralChatbot:
             training_texts.append(phrase)
             training_labels.append('buscar_ambiente')
         
-        # Datos para buscar_por_ocasion
         occasion_phrases = [
             "para una cita", "celebrar aniversario", "cumpleanos",
             "reunion de trabajo", "almuerzo de negocios", "cena romantica",
@@ -133,7 +122,6 @@ class AdvancedNeuralChatbot:
             training_texts.append(phrase)
             training_labels.append('buscar_por_ocasion')
         
-        # Datos para consultas específicas
         hours_phrases = [
             "horarios de atencion", "que hora abren", "hasta que hora",
             "horario de almuerzo", "atienden en la noche", "abierto domingos"
@@ -158,7 +146,6 @@ class AdvancedNeuralChatbot:
             training_texts.append(phrase)
             training_labels.append('consulta_ubicacion')
         
-        # Saludos
         greeting_phrases = [
             "hola", "buenos dias", "buenas tardes", "buenas noches",
             "saludos", "hey", "que tal", "como estas"
@@ -167,7 +154,6 @@ class AdvancedNeuralChatbot:
             training_texts.append(phrase)
             training_labels.append('saludo')
         
-        # Agradecimientos
         thanks_phrases = [
             "gracias", "muchas gracias", "perfecto", "excelente",
             "muy bien", "genial", "buenisimo", "exacto"
@@ -176,7 +162,6 @@ class AdvancedNeuralChatbot:
             training_texts.append(phrase)
             training_labels.append('agradecimiento')
         
-        # Despedidas
         goodbye_phrases = [
             "chau", "hasta luego", "nos vemos", "adios",
             "hasta la vista", "que tengas buen dia", "gracias por todo"
@@ -188,24 +173,19 @@ class AdvancedNeuralChatbot:
         return training_texts, training_labels
     
     def train_model(self):
-        """Entrena el modelo de clasificación"""
         logger.info("Generando datos de entrenamiento...")
         texts, labels = self.generate_training_data()
         
         logger.info(f"Entrenando con {len(texts)} ejemplos...")
         
-        # Vectorizar textos
         X = self.vectorizer.fit_transform(texts)
         
-        # Dividir datos
         X_train, X_test, y_train, y_test = train_test_split(
             X, labels, test_size=0.2, random_state=42, stratify=labels
         )
         
-        # Entrenar modelo
         self.classifier.fit(X_train, y_train)
         
-        # Evaluar modelo
         y_pred = self.classifier.predict(X_test)
         logger.info("Reporte de clasificación:")
         logger.info(classification_report(y_test, y_pred))
@@ -214,7 +194,6 @@ class AdvancedNeuralChatbot:
         self.save_model()
     
     def save_model(self):
-        """Guarda el modelo entrenado"""
         try:
             model_data = {
                 'vectorizer': self.vectorizer,
@@ -229,7 +208,6 @@ class AdvancedNeuralChatbot:
             logger.error(f"Error guardando modelo: {e}")
     
     def load_or_create_model(self):
-        """Carga modelo existente o entrena uno nuevo"""
         if os.path.exists(self.model_path):
             try:
                 with open(self.model_path, 'rb') as f:
@@ -249,18 +227,13 @@ class AdvancedNeuralChatbot:
             self.train_model()
     
     def classify_intent(self, text: str) -> Tuple[str, float]:
-        """Clasifica la intención del texto usando el modelo entrenado"""
         if not self.is_trained:
             return 'buscar_restaurante', 0.5
         
         try:
-            # Vectorizar el texto
             text_vector = self.vectorizer.transform([text])
             
-            # Predecir intención
             intent = self.classifier.predict(text_vector)[0]
-            
-            # Obtener probabilidades
             probabilities = self.classifier.predict_proba(text_vector)[0]
             confidence = max(probabilities)
             
@@ -271,7 +244,6 @@ class AdvancedNeuralChatbot:
             return 'buscar_restaurante', 0.5
     
     def extract_entities(self, text: str) -> Dict[str, List[str]]:
-        """Extrae entidades específicas del texto"""
         text_lower = text.lower()
         entities = {}
         
@@ -284,12 +256,10 @@ class AdvancedNeuralChatbot:
             if found_entities:
                 entities[entity_type] = found_entities
         
-        # Extraer números (cantidad de personas)
         numbers = re.findall(r'\b(?:una|un|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|\d+)\b', text_lower)
         if numbers:
             entities['cantidad_personas'] = numbers
         
-        # Extraer indicadores de tiempo
         time_indicators = re.findall(r'\b(?:hoy|mañana|esta noche|este mediodia|ahora|ya|pronto)\b', text_lower)
         if time_indicators:
             entities['tiempo'] = time_indicators
@@ -297,17 +267,12 @@ class AdvancedNeuralChatbot:
         return entities
     
     def analyze_message(self, text: str) -> Dict[str, any]:
-        """Análisis completo del mensaje"""
-        # Clasificar intención
         intent, confidence = self.classify_intent(text)
         
-        # Extraer entidades
         entities = self.extract_entities(text)
         
-        # Análisis de sentimiento básico
         sentiment = self._analyze_sentiment(text)
         
-        # Extraer preferencias específicas
         preferences = self._extract_preferences(text, entities)
         
         return {
@@ -320,7 +285,6 @@ class AdvancedNeuralChatbot:
         }
     
     def _analyze_sentiment(self, text: str) -> str:
-        """Análisis básico de sentimiento"""
         positive_words = ['bueno', 'excelente', 'genial', 'perfecto', 'rico', 'delicioso']
         negative_words = ['malo', 'terrible', 'horrible', 'feo', 'caro', 'sucio']
         
@@ -336,10 +300,8 @@ class AdvancedNeuralChatbot:
             return 'neutral'
     
     def _extract_preferences(self, text: str, entities: Dict) -> Dict[str, List[str]]:
-        """Convierte entidades en preferencias estructuradas"""
         preferences = {}
         
-        # Mapear entidades a preferencias
         if 'comida_boliviana' in entities:
             preferences['tipo_comida'] = ['tradicional', 'boliviana']
         
@@ -364,7 +326,6 @@ class AdvancedNeuralChatbot:
         return preferences
     
     def should_search_establishments(self, intent: str, confidence: float) -> bool:
-        """Determina si se debe realizar búsqueda de establecimientos"""
         search_intents = [
             'buscar_restaurante',
             'buscar_comida_especifica',
@@ -375,7 +336,6 @@ class AdvancedNeuralChatbot:
         return intent in search_intents and confidence > 0.6
     
     def get_response_template(self, intent: str, entities: Dict = None) -> str:
-        """Genera template de respuesta contextualizado"""
         templates = {
             'buscar_restaurante': [
                 "Perfecto, te ayudo a encontrar un lugar ideal. ",
@@ -407,7 +367,5 @@ class AdvancedNeuralChatbot:
         template_list = templates.get(intent, ["Entiendo, ¿puedes darme más detalles? "])
         return np.random.choice(template_list)
 
-# Función auxiliar para inicializar el modelo
 def get_neural_classifier():
-    """Función para obtener una instancia del clasificador neuronal"""
     return AdvancedNeuralChatbot()

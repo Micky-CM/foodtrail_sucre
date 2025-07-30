@@ -2,7 +2,7 @@
 {% load static %}
 {% csrf_token %}
 
-{% block title %}FoodTrail AI - Chatbot Gastronómico{% endblock %}
+{% block title %}FoodTrail - Chatbot Gastronómico{% endblock %}
 
 <style>
     .chat-container {
@@ -335,8 +335,8 @@ class ChatBot {
             if (data.status === 'ok') {
                 const isConnected = data.llm_connected;
                 this.statusIndicator.textContent = isConnected ? 
-                    `IA Conectada (${data.provider})` : 
-                    `IA Desconectada (${data.provider})`;
+                    `Sistema Conectado (${data.provider})` : 
+                    `Sistema Desconectado (${data.provider})`;
                 this.statusIndicator.className = `status-indicator ${isConnected ? 'status-online' : 'status-offline'}`;
             }
         } catch (error) {
